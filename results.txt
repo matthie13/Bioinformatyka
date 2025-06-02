@@ -1,8 +1,0 @@
->Rekonstrukcja (15 nt):
-CATACCGATGCTCAA
-
->Koszt ścieżki (suma wag): Niepełna
->Odległość Levenshteina: 485
->Dokładność rekonstrukcji: 3.00%
->Liczba ekspansji (kroków): 2555
->Czas wykonania: 0.44 s
