@@ -130,11 +130,11 @@ def generate_sbh_instance(
     print(f"Oryginalne DNA zapisane do '{original_filename}'")
 
 if __name__ == "__main__":
-    random.seed(42)  # opcjonalnie dla powtarzalności
+    random.seed(41)  # opcjonalnie dla powtarzalności
     generate_sbh_instance(
-        n=700,
+        n=500,
         k=8,
-        num_neg_errors=5,
+        num_neg_errors=40,
         num_pos_errors=0,
         has_repeats=True,
         instance_filename="instance.txt",
