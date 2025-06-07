@@ -132,10 +132,10 @@ def generate_sbh_instance(
 if __name__ == "__main__":
     random.seed(41)  # opcjonalnie dla powtarzalności
     generate_sbh_instance(
-        n=500,
+        n=300,
         k=8,
-        num_neg_errors=40,
-        num_pos_errors=0,
+        num_neg_errors=30,
+        num_pos_errors=15,
         has_repeats=True,
         instance_filename="instance.txt",
         original_filename="original.txt"

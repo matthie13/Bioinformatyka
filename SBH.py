@@ -5,9 +5,6 @@ import random
 import argparse
 import heapq
 
-# -----------------------------
-# Levenshtein distance function
-# -----------------------------
 def levenshtein(a: str, b: str) -> int:
     """Compute the Levenshtein distance between strings a and b."""
     if b is None:
@@ -30,27 +27,7 @@ def levenshtein(a: str, b: str) -> int:
 
     return current[n]
 
-
-# -----------------------------
-# Read SBH instance from file
-# -----------------------------
 def read_instance(filename):
-    """
-    Reads an SBH instance file with the following format:
-      n
-      k
-      start_oligo
-      num_neg_errors
-      has_repeats (0/1)
-      num_pos_errors
-      k-mer_1
-      k-mer_2
-      ...
-    Returns:
-      n (int), k (int), start_oligo (str),
-      num_neg_errors (int), has_repeats (bool),
-      num_pos_errors (int), kmers (list of str)
-    """
     with open(filename, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
     if len(lines) < 6:
@@ -70,10 +47,7 @@ def read_instance(filename):
     kmers = lines[6:]
     return n, k, start_oligo, num_neg_errors, has_repeats, num_pos_errors, kmers
 
-
-# -----------------------------
 # Build adjacency list with weights using prefix-suffix hashing
-# -----------------------------
 def build_adjacency(kmers, k):
     """
     Build a list of neighbors, weights, and overlaps for each k-mer index,
@@ -101,10 +75,6 @@ def build_adjacency(kmers, k):
                     adj[i].append((j, w, o))
     return adj
 
-
-# -----------------------------
-# Initialize pheromone matrix
-# -----------------------------
 def init_pheromones(kmers, k, tau0, adj):
     """
     Initializes pheromone matrix for |kmers| x |kmers|.
@@ -117,10 +87,6 @@ def init_pheromones(kmers, k, tau0, adj):
             pher[i][j] = tau0
     return pher
 
-
-# -----------------------------
-# ANT data structure
-# -----------------------------
 class Ant:
     def __init__(self, max_steps, num_kmers):
         self.trail = [-1] * max_steps       # indices of k-mers visited
@@ -182,10 +148,7 @@ def dijkstra_shortest_path(adj, used_count, repeat_limits, start, targets, k):
     path.reverse()
     return best_target, path
 
-
-# -----------------------------
 # Reconstruct sequence from trail
-# -----------------------------
 def reconstruct_sequence(kmers, k, trail, trail_len, n):
     """
     Given a trail of k-mer indices, reconstruct the DNA sequence of length n
@@ -217,10 +180,7 @@ def reconstruct_sequence(kmers, k, trail, trail_len, n):
             break
     return seq[:n]
 
-
-# -----------------------------
 # Check if an edge exists from u to v
-# -----------------------------
 def edge_weight(adj, kmers, u, v, k):
     """
     Returns the weight (k - overlap) if an edge u->v exists in adj, else None.
@@ -230,10 +190,7 @@ def edge_weight(adj, kmers, u, v, k):
             return w_uv
     return None
 
-
-# -----------------------------
 # Aggressive 2-opt improvement (with validity checks)
-# -----------------------------
 def two_opt_on_trail(ant, kmers, k, n, adj, max_swaps=20):
     """
     Perform up to max_swaps random 2-opt attempts on ant's trail to reduce sum of weights,
@@ -277,9 +234,7 @@ def two_opt_on_trail(ant, kmers, k, n, adj, max_swaps=20):
         ant.seq_len = max(ant.seq_len, n)
 
 
-# -----------------------------
 # ACO: Build trails for all ants
-# -----------------------------
 def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                 num_neg_errors, num_pos_errors, has_repeats,
                 repeat_limits, n):
@@ -300,16 +255,18 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
     only_pos = (num_neg_errors == 0 and num_pos_errors > 0)
 
     for ant in ants:
+        # Start from the given start_oligo
+        start_idx = ant.trail[0]
         # Reset ant state
+# w update_ants, na samym początku pętli for ant in ants:
+        ant.trail     = [-1] * max_steps
+        ant.trail[0]  = start_idx
+        ant.trail_len = 1
+        ant.seq_len   = k
+        ant.length    = 0.0
         for i in range(num_kmers):
             ant.used_count[i] = 0
-        ant.length = 0.0
-        ant.trail_len = 1
-        ant.seq_len = k
-
-        # Start at the given start_oligo index (already in trail[0])
-        start_idx = ant.trail[0]
-        ant.used_count[start_idx] += 1
+            ant.used_count[start_idx] = 1
 
         # Build the trail
         while ant.seq_len < n and ant.trail_len < max_steps:
@@ -623,10 +580,7 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
         if ant.seq_len >= n:
             two_opt_on_trail(ant, kmers, k, n, adj, max_swaps=20)
 
-
-# -----------------------------
 # ACO: Update pheromones
-# -----------------------------
 def update_pheromones(pher, ants, n, Q, rho, global_best):
     num_kmers = len(pher)
     # Evaporation
@@ -657,10 +611,7 @@ def update_pheromones(pher, ants, n, Q, rho, global_best):
             v = trail[idx + 1]
             pher[u][v] += contribution
 
-
-# -----------------------------
 # Main ACO routine for SBH-DNA
-# -----------------------------
 def run_aco_sbh(instance_file, original_file=None,
                 num_ants=100, alpha=1.0, beta=2.0,
                 rho=0.1, Q=20.0, tau0=1.0,
@@ -766,12 +717,12 @@ def run_aco_sbh(instance_file, original_file=None,
                     improved_this_iter = True
 
                 # alternatywnie: jeśli priorytet ma Levenshtein → użyj:
-                # if dist < global_best['dist']:
+                #if dist < global_best['dist']:
                 #     global_best['length'] = ant.length
                 #     global_best['dist'] = dist
-                #     global_best['trail'] = ant.trail[:ant.trail_len]
-                #     global_best['seq'] = seq
-                #     improved_this_iter = True
+                 #    global_best['trail'] = ant.trail[:ant.trail_len]
+                 #    global_best['seq'] = seq
+                 #    improved_this_iter = True
 
 
         # Update pheromones with elitist deposit, ale tylko jeśli chociaż jedna mrówka ukończyła
@@ -809,7 +760,6 @@ def run_aco_sbh(instance_file, original_file=None,
         if global_best['dist'] is not None:
             print(f"Levenshtein distance to original: {global_best['dist']}")
 
-
 # -----------------------------
 # Command-line interface
 # -----------------------------
@@ -826,7 +776,6 @@ def parse_args():
     parser.add_argument("-t", "--time", type=int, help="Max time in seconds (0 = no limit)", default=60)
     parser.add_argument("-i", "--iter", type=int, help="Max iterations (0 = no limit)", default=0)
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_args()
