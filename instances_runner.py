@@ -101,11 +101,11 @@ def run_experiments(inst_file, orig_file, ants_list, times_list, sbh_script, com
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--instances', default='instance-2-600.txt')
-    parser.add_argument('--originals', default='original-2-600.txt')
+    parser.add_argument('--instances', default='instance-50-300.txt')
+    parser.add_argument('--originals', default='original-50-300.txt')
     parser.add_argument('--sbh', default='SBH.py')
     parser.add_argument('--ants', nargs='+', type=int, default=[100])
-    parser.add_argument('--time', '-t', nargs='+', type=int, default=[5, 20, 35, 50, 65])
+    parser.add_argument('--time', '-t', nargs='+', type=int, default=[2])
     parser.add_argument('--alpha', type=float, default=0.7)
     parser.add_argument('--beta', type=float, default=6.0)
     parser.add_argument('--rho', type=float, default=0.8)
@@ -129,7 +129,7 @@ def main():
 
     print("\n=== Average Levenshtein by (ants, time) ===")
     for (ants, t_budget), avg in sorted(results.items()):
-        print(f"Ants={ants}, Time={t_budget}s: avg Levenshtein={avg:.2f}")
+        print(f"Ants={ants}, Time={t_budget}s: avg Levenshtein = {avg:.2f}")
 
 if __name__ == '__main__':
     main()

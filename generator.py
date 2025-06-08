@@ -23,24 +23,26 @@ def generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats):
     else:
         dna = ''.join(random.choices('ATCG', k=n))
 
+    start_oligo = dna[:k]
     all_kmers = [dna[i : i+k] for i in range(n - k + 1)]
     ideal_set = set(all_kmers)
     spectrum = list(ideal_set)
     to_remove = []
 
+    # NEGATIVE ERRORS (remove real kmers, but not start_oligo)
     if num_neg_errors > 0:
         if has_repeats:
             counts = Counter(all_kmers)
-            repeat_kmers = [kmer for kmer, c in counts.items() if c >= 2]
+            repeat_kmers = [kmer for kmer, c in counts.items() if c >= 2 and kmer != start_oligo]
             random.shuffle(repeat_kmers)
             r = min(len(repeat_kmers), num_neg_errors)
             to_remove = repeat_kmers[:r]
             if r < num_neg_errors:
-                others = list(ideal_set - set(repeat_kmers))
+                others = list(ideal_set - set(repeat_kmers) - {start_oligo})
                 random.shuffle(others)
                 to_remove += others[: (num_neg_errors - r) ]
         else:
-            removable = spectrum.copy()
+            removable = list(set(spectrum) - {start_oligo})
             random.shuffle(removable)
             to_remove = removable[: min(len(removable), num_neg_errors) ]
         for kmer in to_remove:
@@ -54,6 +56,9 @@ def generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats):
     while pos_errors_added < num_pos_errors and idx < len(ideal_list_for_pos):
         base = ideal_list_for_pos[idx]
         idx += 1
+        if base == start_oligo:
+            continue  # don't mutate start_oligo
+
         last = base[-1]
         for alt in 'ACGT':
             if alt != last:
@@ -65,6 +70,7 @@ def generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats):
                     break
         if pos_errors_added >= num_pos_errors:
             break
+
         mid_index = (k // 2)
         mid = base[mid_index]
         for alt in 'ACGT':
@@ -77,23 +83,24 @@ def generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats):
                     break
 
     random.shuffle(spectrum)
-    return dna, spectrum, dna[:k], len(to_remove), pos_errors_added
+    return dna, spectrum, start_oligo, len(to_remove), pos_errors_added
 
 if __name__ == "__main__":
     random.seed()
-    N_INSTANCES = 1
-    n = 700
+    N_INSTANCES = 50
+    n = 300
     k = 8
-    num_neg_errors = 70
+    num_neg_errors = 30
     num_pos_errors = 0
     has_repeats = True
 
-    with open(f"instance-{N_INSTANCES}-{n}.txt", "w") as inst_file, open(f"original-{N_INSTANCES}-{n}.txt", "w") as orig_file:
+    with open(f"instance-{N_INSTANCES}-{n}.txt", "w") as inst_file, \
+         open(f"original-{N_INSTANCES}-{n}.txt", "w") as orig_file:
+
         for idx in range(N_INSTANCES):
-            dna, spectrum, start_oligo, neg_errors_actual, pos_errors_actual = generate_single_instance(
-                n, k, num_neg_errors, num_pos_errors, has_repeats
-            )
-            # Zapis instancji do wspólnego pliku
+            dna, spectrum, start_oligo, neg_errors_actual, pos_errors_actual = \
+                generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats)
+
             inst_file.write(f"# Instance {idx+1}\n")
             inst_file.write(f"{n}\n")
             inst_file.write(f"{k}\n")
@@ -105,7 +112,6 @@ if __name__ == "__main__":
                 inst_file.write(kmer + "\n")
             inst_file.write("\n")
 
-            # Zapis DNA do osobnego pliku
             orig_file.write(f"# Instance {idx+1}\n{dna}\n")
 
     print(f"Wygenerowano {N_INSTANCES} instancji.")
