@@ -81,10 +81,10 @@ def generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats):
 
 if __name__ == "__main__":
     random.seed()
-    N_INSTANCES = 50
-    n = 500
+    N_INSTANCES = 1
+    n = 700
     k = 8
-    num_neg_errors = 50
+    num_neg_errors = 70
     num_pos_errors = 0
     has_repeats = True
 
