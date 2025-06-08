@@ -779,7 +779,7 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    random.seed(42)
+    random.seed()
     run_aco_sbh(
         instance_file=args.instance,
         original_file=args.original,
