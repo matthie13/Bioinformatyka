@@ -86,11 +86,11 @@ def generate_single_instance(n, k, num_neg_errors, num_pos_errors, has_repeats):
     return dna, spectrum, start_oligo, len(to_remove), pos_errors_added
 
 if __name__ == "__main__":
-    random.seed()
+    random.seed(123456789)
     N_INSTANCES = 50
-    n = 300
-    k = 8
-    num_neg_errors = 30
+    n = 700
+    k = 7
+    num_neg_errors = 70  
     num_pos_errors = 0
     has_repeats = True
 
