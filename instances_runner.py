@@ -113,8 +113,8 @@ def run_experiments(inst_file, orig_file, ants_list, times_list, betas_list, sbh
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--instances', default='instance-50-500.txt')
-    parser.add_argument('--originals', default='original-50-500.txt')
+    parser.add_argument('--instances', default='instance-50-700.txt')
+    parser.add_argument('--originals', default='original-50-700.txt')
     parser.add_argument('--sbh', default='SBH.py')
     parser.add_argument('--ants', nargs='+', type=int, default=[100])
     parser.add_argument('--time', '-t', nargs='+', type=int, default=[10])

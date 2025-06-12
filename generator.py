@@ -89,7 +89,7 @@ if __name__ == "__main__":
     random.seed(123456789)
     N_INSTANCES = 50
     n = 700
-    k = 7
+    k = 10
     num_neg_errors = 70  
     num_pos_errors = 0
     has_repeats = True

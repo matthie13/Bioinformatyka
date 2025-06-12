@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 import time
 import random
@@ -47,7 +46,6 @@ def read_instance(filename):
     kmers = lines[6:]
     return n, k, start_oligo, num_neg_errors, has_repeats, num_pos_errors, kmers
 
-# Build adjacency list with weights using prefix-suffix hashing
 def build_adjacency(kmers, k):
     """
     Build a list of neighbors, weights, and overlaps for each k-mer index,
@@ -95,10 +93,6 @@ class Ant:
         self.length = 0.0                   # sum of weights (k - overlap)
         self.seq_len = 0                    # current reconstructed sequence length
 
-
-# -----------------------------
-# Dijkstra for weighted shortest path (fresh-first)
-# -----------------------------
 def dijkstra_shortest_path(adj, used_count, repeat_limits, start, targets, k):
     """
     Run Dijkstra from start to each target in 'targets',
@@ -138,8 +132,6 @@ def dijkstra_shortest_path(adj, used_count, repeat_limits, start, targets, k):
 
     if best_target is None:
         return None, None
-
-    # Reconstruct path from start to best_target
     path = []
     node = best_target
     while node != -1:
@@ -148,12 +140,7 @@ def dijkstra_shortest_path(adj, used_count, repeat_limits, start, targets, k):
     path.reverse()
     return best_target, path
 
-# Reconstruct sequence from trail
 def reconstruct_sequence(kmers, k, trail, trail_len, n):
-    """
-    Given a trail of k-mer indices, reconstruct the DNA sequence of length n
-    by overlapping appropriately.
-    """
     if trail_len == 0:
         return ""
     seq = kmers[trail[0]]
@@ -161,7 +148,6 @@ def reconstruct_sequence(kmers, k, trail, trail_len, n):
     for i in range(1, trail_len):
         u = trail[i - 1]
         v = trail[i]
-        # compute overlap
         ov = 0
         for o in range(k - 1, 0, -1):
             if kmers[u][-o:] == kmers[v][:o]:
@@ -180,17 +166,14 @@ def reconstruct_sequence(kmers, k, trail, trail_len, n):
             break
     return seq[:n]
 
-# Check if an edge exists from u to v
+
 def edge_weight(adj, kmers, u, v, k):
-    """
-    Returns the weight (k - overlap) if an edge u->v exists in adj, else None.
-    """
+
     for (jj, w_uv, ov) in adj[u]:
         if jj == v:
             return w_uv
     return None
 
-# Aggressive 2-opt improvement (with validity checks)
 def two_opt_on_trail(ant, kmers, k, n, adj, max_swaps=20):
     """
     Perform up to max_swaps random 2-opt attempts on ant's trail to reduce sum of weights,
@@ -233,8 +216,6 @@ def two_opt_on_trail(ant, kmers, k, n, adj, max_swaps=20):
         ant.length = best_len
         ant.seq_len = max(ant.seq_len, n)
 
-
-# ACO: Build trails for all ants
 def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                 num_neg_errors, num_pos_errors, has_repeats,
                 repeat_limits, n):
@@ -245,7 +226,7 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
       - TRYB PÓŁ-IDEALNY (tylko negatywy lub tylko pozytywy): 
         proste przeszukiwanie overlapy w kolejności o=k-1..1,
         potem Dijkstra, potem virtual jump
-      - TRYB PEŁNY (błędy mieszane): ACO → overlapy → Dijkstra → virtual jump
+      - TRYB PEŁNY (błędy mieszane): ACO -> overlapy -> Dijkstra -> virtual jump
     """
     num_kmers = len(kmers)
     max_steps = len(ants[0].trail)
@@ -255,10 +236,7 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
     only_pos = (num_neg_errors == 0 and num_pos_errors > 0)
 
     for ant in ants:
-        # Start from the given start_oligo
         start_idx = ant.trail[0]
-        # Reset ant state
-# w update_ants, na samym początku pętli for ant in ants:
         ant.trail     = [-1] * max_steps
         ant.trail[0]  = start_idx
         ant.trail_len = 1
@@ -267,14 +245,11 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
         for i in range(num_kmers):
             ant.used_count[i] = 0
             ant.used_count[start_idx] = 1
-
-        # Build the trail
         while ant.seq_len < n and ant.trail_len < max_steps:
             u = ant.trail[ant.trail_len - 1]
 
-            # === TRYB IDEALNY ===
+            # TRYB IDEALNY
             if ideal:
-                # Step 1: try overlap = k-1, but w pierwszej kolejności tylko "świeże" węzły
                 fresh_candidates = []
                 reuse_candidates = []
                 for (j, w_uv, ov) in adj[u]:
@@ -300,7 +275,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                     ant.trail_len += 1
                     continue
 
-                # Step 2: try overlap = k-1, k-2, ..., 1 (fresh first, then reuse)
                 found = False
                 for o in range(k - 2, 0, -1):
                     fresh2 = []
@@ -329,11 +303,10 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                         ant.trail_len += 1
                         found = True
                         break
-                    # jeśli nic w overlap=o, idź dalej o-1
                 if found:
                     continue
 
-                # Step 3: Dijkstra do jakiegokolwiek j, gdzie used_count[j] < repeat_limits[j]
+                # Dijkstra do jakiegokolwiek j, gdzie used_count[j] < repeat_limits[j]
                 Y = [j for j in range(num_kmers) if ant.used_count[j] < repeat_limits[j]]
                 if Y:
                     best_y, path = dijkstra_shortest_path(adj, ant.used_count, repeat_limits, u, Y, k)
@@ -353,7 +326,7 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                                 break
                         continue
 
-                # Step 4: Virtual jump (ov = 0)
+                # Virtual jump
                 jumped = False
                 for j in range(num_kmers):
                     if ant.used_count[j] < repeat_limits[j]:
@@ -370,9 +343,8 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                 # Dead end
                 break
 
-            # === TRYB PÓŁ-IDEALNY (Tylko negatywy lub tylko pozytywy), ale z wykorzystaniem feromonów ===
+            #  TRYB PÓŁ-IDEALNY (Tylko negatywy lub tylko pozytywy), ale z wykorzystaniem feromonów
             if only_neg or only_pos:
-                # Phase 1: ACO-biased selection spośród overlap>=1
                 candidates = []
                 probs = []
                 for (j, w_uv, ov) in adj[u]:
@@ -399,7 +371,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                     ant.trail_len += 1
                     continue
 
-                # Phase 2: try overlap = k-1..1 (fresh first, then reuse)
                 found = False
                 for o in range(k - 1, 0, -1):
                     fresh = []
@@ -431,7 +402,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                 if found:
                     continue
 
-                # Phase 3: Dijkstra (fresh first, potem reuse)
                 Y_fresh = [j for j in range(num_kmers) if ant.used_count[j] == 0]
                 if Y_fresh:
                     best_y, path = dijkstra_shortest_path(adj, ant.used_count, repeat_limits, u, Y_fresh, k)
@@ -455,7 +425,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                             break
                     continue
 
-                # Phase 4: Virtual jump (ov = 0)
                 jumped = False
                 for j in range(num_kmers):
                     if ant.used_count[j] < repeat_limits[j]:
@@ -473,14 +442,13 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                 break
 
 
-            # === TRYB PEŁNY (Mieszane błędy) ===
-            # Phase 1: ACO-biased selection among overlap >=1
+            # TRYB PEŁNY (Mieszane błędy)
             candidates = []
             probs = []
             for (j, w_uv, ov) in adj[u]:
                 if ant.used_count[j] < repeat_limits[j]:
                     pheromone = pher[u][j] if pher[u][j] > 0 else 1e-12
-                    heur = ov  # prefer larger overlap
+                    heur = ov
                     prob = (pheromone ** alpha) * (heur ** beta)
                     candidates.append((j, w_uv, ov))
                     probs.append(prob)
@@ -502,7 +470,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                 ant.trail_len += 1
                 continue
 
-            # Phase 2: try overlap = k-1..1 (fresh first, then reuse)
             found = False
             for o in range(k - 1, 0, -1):
                 fresh = []
@@ -531,11 +498,9 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                     ant.trail_len += 1
                     found = True
                     break
-                # jeśli nic overlap=o, przeglądaj dalej o-1
             if found:
                 continue
 
-            # Phase 3: Dijkstra (fresh first, then reuse)
             Y_fresh = [j for j in range(num_kmers) if ant.used_count[j] == 0]
             if Y_fresh:
                 best_y, path = dijkstra_shortest_path(adj, ant.used_count, repeat_limits, u, Y_fresh, k)
@@ -559,7 +524,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                         break
                 continue
 
-            # Phase 4: Virtual jump (ov = 0)
             jumped = False
             for j in range(num_kmers):
                 if ant.used_count[j] < repeat_limits[j]:
@@ -572,8 +536,6 @@ def update_ants(ants, kmers, k, adj, pher, alpha, beta,
                     break
             if jumped:
                 continue
-
-            # Dead end
             break
 
         # After building a path, attempt local 2-opt improvement if valid
@@ -589,10 +551,9 @@ def update_pheromones(pher, ants, n, Q, rho, global_best):
             old = pher[i][j]
             pher[i][j] *= (1.0 - rho)
            # if abs(pher[i][j] - old) > 1e-8:
-                # Wypisz tylko kilkanaście “zmian”, by nie spamować konsoli
+                # Wypisz tylko kilkanaście zmian by nie spamować konsoli
             #   print(f"DEBUG: Pho[{i}][{j}] {old:.4e} → {pher[i][j]:.4e}")
 
-    # Deposit from each qualifying ant
     for ant in ants:
         if ant.seq_len < n or ant.length <= 0:
             continue
@@ -602,7 +563,6 @@ def update_pheromones(pher, ants, n, Q, rho, global_best):
             v = ant.trail[pos + 1]
             pher[u][v] += contribution
 
-    # Elitist deposit (global best)
     if global_best.get('trail') is not None and len(global_best['trail']) > 1:
         contribution = Q / global_best['length']
         trail = global_best['trail']
@@ -611,7 +571,6 @@ def update_pheromones(pher, ants, n, Q, rho, global_best):
             v = trail[idx + 1]
             pher[u][v] += contribution
 
-# Main ACO routine for SBH-DNA
 def run_aco_sbh(instance_file, original_file=None,
                 num_ants=100, alpha=1.0, beta=2.0,
                 rho=0.1, Q=20.0, tau0=1.0,
@@ -645,7 +604,6 @@ def run_aco_sbh(instance_file, original_file=None,
                 original_seq = None
 
     pher = init_pheromones(kmers, k, tau0, adj)
-    # Jeśli powtórzenia, limit = num_neg_errors+1; w przeciwnym razie 1
     repeat_limit_value = (num_neg_errors + 1) if has_repeats else 1
     repeat_limits = [repeat_limit_value] * num_kmers
 
@@ -668,13 +626,9 @@ def run_aco_sbh(instance_file, original_file=None,
 
     while True:
         iter_count += 1
-
-        # Build trails
         update_ants(ants, kmers, k, adj, pher, alpha, beta,
                     num_neg_errors, num_pos_errors, has_repeats,
                     repeat_limits, n)
-
-        # Count completed ants and overlap histogram
         completed = sum(1 for ant in ants if ant.seq_len >= n)
         overlap_hist = [0] * k
         for ant in ants:
@@ -688,17 +642,14 @@ def run_aco_sbh(instance_file, original_file=None,
                         break
                 overlap_hist[ov] += 1
 
-        # Check each ant for a valid solution and update best
         improved_this_iter = False
         for ant in ants:
             if ant.seq_len < n:
                 continue
 
-            # zawsze przeliczamy odległość Levenshteina
             seq = reconstruct_sequence(kmers, k, ant.trail, ant.trail_len, n)
             dist = levenshtein(seq, original_seq)
 
-            # Jeśli wcześniej nie było żadnego best
             if global_best['trail'] is None:
                 global_best['length'] = ant.length
                 global_best['dist'] = dist
@@ -707,7 +658,6 @@ def run_aco_sbh(instance_file, original_file=None,
                 improved_this_iter = True
 
             else:
-                # strategia (B): najpierw porównujemy length, gdy równe → Levenshtein
                 if ant.length < global_best['length'] or \
                    (ant.length == global_best['length'] and dist < global_best['dist']):
                     global_best['length'] = ant.length
@@ -715,17 +665,7 @@ def run_aco_sbh(instance_file, original_file=None,
                     global_best['trail'] = ant.trail[:ant.trail_len]
                     global_best['seq'] = seq
                     improved_this_iter = True
-
-                # alternatywnie: jeśli priorytet ma Levenshtein → użyj:
-                #if dist < global_best['dist']:
-                #     global_best['length'] = ant.length
-                #     global_best['dist'] = dist
-                 #    global_best['trail'] = ant.trail[:ant.trail_len]
-                 #    global_best['seq'] = seq
-                 #    improved_this_iter = True
-
-
-        # Update pheromones with elitist deposit, ale tylko jeśli chociaż jedna mrówka ukończyła
+                    
         if completed > 0:
             update_pheromones(pher, ants, n, Q, rho, global_best)
 
@@ -760,9 +700,7 @@ def run_aco_sbh(instance_file, original_file=None,
         if global_best['dist'] is not None:
             print(f"Levenshtein distance to original: {global_best['dist']}")
 
-# -----------------------------
-# Command-line interface
-# -----------------------------
+# CLI
 def parse_args():
     parser = argparse.ArgumentParser(description="ACO for SBH-DNA reconstruction")
     parser.add_argument("instance", help="Path to instance.txt file")
