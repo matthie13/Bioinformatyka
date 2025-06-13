@@ -52,14 +52,14 @@ int main(const int argc, char** argv) {
             instance.neg_errors,
             instance.has_repeats,
             instance.pos_errors,
-            20,
-            0.6,
-            8.0,
-            0.8,
-            0.1,
+            35,
+            1.0,
+            2.0,
+            0.7,
+            0.3,
             0.5,
             0,
-            100
+            1000
         );
         int levenshtein = levenshtein_score(reconstructed, original);
         total_levenshtein += levenshtein;

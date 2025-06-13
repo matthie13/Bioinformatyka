@@ -15,6 +15,7 @@ set(SOURCE_FILES src/main.cpp
 		src/levenshtein.cpp
         src/aco.cpp
         src/aco.h
+		src/settings.h
 )
 
 add_executable(sbh ${SOURCE_FILES})

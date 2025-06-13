@@ -1,5 +1,6 @@
 #include "aco.h"
 #include "levenshtein.h"
+#include "settings.h"
 
 std::pair<int, int> choose_random(const std::vector<std::pair<int, int>>& candidates) {
     static std::mt19937 rng(std::random_device{}());
@@ -516,14 +517,14 @@ std::string run_aco(const std::vector<std::string>& kmers,
                                         int num_neg_errors,
                                         bool has_repeats,
                                         int num_pos_errors,
-                                        int num_ants,
-                                        double alpha,
-                                        double beta,
-                                        double rho,
-                                        double Q,
-                                        double tau0,
-                                        int max_time,
-                                        int max_iter) {
+                                        int num_ants = settings::NUM_ANTS,
+                                        double alpha = settings::ALPHA,
+                                        double beta = settings::BETA,
+                                        double rho = settings::RHO,
+                                        double Q = settings::Q,
+                                        double tau0 = settings::TAU0,
+                                        int max_time = settings::MAX_TIME,
+                                        int max_iter = settings::MAX_ITER) {
     int start_idx = 0;
     bool found_start = false;
     for (int i = 0; i < kmers.size(); i++) {
