@@ -7,14 +7,14 @@ set(CMAKE_DEFAULT_PROJECT_FILE src/main.cpp)
 
 set(SOURCE_FILES src/main.cpp
 		src/config.h
-		src/instance_runner.h
-		src/instance_runner.cpp
+        src/instance_parser.h
+        src/instance_parser.cpp
 		src/sbh.h
 		src/sbh.cpp
 		src/levenshtein.h
 		src/levenshtein.cpp
-		src/ant.cpp
-		src/ant.h
+        src/aco.cpp
+        src/aco.h
 )
 
 add_executable(sbh ${SOURCE_FILES})

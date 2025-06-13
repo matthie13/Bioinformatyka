@@ -1,8 +1,8 @@
 #include "config.h"
-#include "instance_runner.h"
+#include "instance_parser.h"
 #include "sbh.h"
 #include "levenshtein.h"
-#include "ant.h"
+#include "aco.h"
 
 
 int main(const int argc, char** argv) {
@@ -27,11 +27,11 @@ int main(const int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    std::cout << "INFO: Processing " << instances.size() << " instances...\n\n";
+    std::cout << "INFO: Processing " << instances.size() << " instance(s)...\n\n";
 
     int total_levenshtein = 0;
 
-    for (size_t i = 0; i < instances.size(); ++i) {
+    for (int i = 0; i < instances.size(); ++i) {
         const auto& instance = instances[i];
         const auto& original = originals[i];
 
@@ -52,12 +52,12 @@ int main(const int argc, char** argv) {
             instance.neg_errors,
             instance.has_repeats,
             instance.pos_errors,
-            100,
-            1.0,
-            2.0,
+            20,
+            0.6,
+            8.0,
+            0.8,
             0.1,
-            20.0,
-            1.0,
+            0.5,
             0,
             100
         );
